@@ -16,6 +16,4 @@ WORKDIR /app
 
 COPY --from=build /src/bin/server /app/server
 
-EXPOSE 8082
-
 ENTRYPOINT ["/app/server"]

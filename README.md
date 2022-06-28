@@ -7,3 +7,5 @@
 
 # PoW algorithm
 PoW algorithm is HashCash, it's optimal choice for spam protection and this algorithm has proven itself well in large-scale systems. 
+
+# Running applications with docker compose via `make run_docker_compose`

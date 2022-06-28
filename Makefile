@@ -16,6 +16,9 @@ run_client:
 run_server:
 	@go run server/cmd/main.go
 
+run_docker_compose:
+	@docker compose up --build
+
 docker_build_client:
 	@docker build -t word_of_wisdom_client -f client/Dockerfile .
 

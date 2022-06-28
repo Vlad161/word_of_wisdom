@@ -19,7 +19,7 @@ func main() {
 	ticker := time.NewTicker(1 * time.Second)
 	powAlg := pow.NewHashCash()
 
-	cl := http.NewClient("http://localhost:8082", &gohttp.Client{
+	cl := http.NewClient("http://server:8001", &gohttp.Client{
 		Timeout: 3 * time.Second,
 	}, powAlg)
 

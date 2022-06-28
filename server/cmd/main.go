@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	port                = 8080
+	port                = 8001
 	authTokenLifetime   = 10 * time.Second
 	authTokenTargetBits = 14
 )

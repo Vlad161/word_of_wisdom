@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  client:
+    build:
+      dockerfile: client/Dockerfile
+    container_name: word_of_wisdom_client
+    depends_on:
+      - server
+    restart: unless-stopped
+  server:
+    build:
+      dockerfile: server/Dockerfile
+    container_name: word_of_wisdom_server
+    ports:
+      - "8001:8001"
+    restart: unless-stopped

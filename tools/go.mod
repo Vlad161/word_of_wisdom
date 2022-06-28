@@ -1,4 +1,4 @@
-module gitlab.maiv.biz/exprowhite/card-processing/tools
+module word_of_wisdom/tools
 
 go 1.18
 
