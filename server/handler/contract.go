@@ -11,4 +11,6 @@ type Handler interface {
 type TokenStorage interface {
 	Put(k string, v uint)
 	Use(k string) bool
+	Verify(k string) bool
+	TargetBits(k string) (uint, bool)
 }

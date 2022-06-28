@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	port              = 8080
-	authTokenLifetime = 10 * time.Second
+	port                = 8080
+	authTokenLifetime   = 10 * time.Second
+	authTokenTargetBits = 14
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	defer cancelCtx()
 
 	tokenStorage := token.NewStorage(ctx, authTokenLifetime)
-	challengeHandler := handler.NewChallengeHandler(tokenStorage)
+	challengeHandler := handler.NewChallengeHandler(authTokenTargetBits, tokenStorage)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/quote", handler.AuthMW(handler.QuoteHandlerFunc(), tokenStorage))

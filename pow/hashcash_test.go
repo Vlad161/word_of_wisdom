@@ -27,7 +27,7 @@ func TestHashCash(t *testing.T) {
 		fmt.Printf("nonce: %d, hash: %x \n", nonce, hash)
 
 		require.True(t, ok)
-		require.True(t, hc.Verify())
+		require.True(t, hc.Verify(nonce))
 	})
 
 	t.Run("timeout exceeded", func(t *testing.T) {
@@ -44,6 +44,6 @@ func TestHashCash(t *testing.T) {
 		fmt.Printf("nonce: %d, hash: %x \n", nonce, hash)
 
 		require.False(t, ok)
-		require.False(t, hc.Verify())
+		require.False(t, hc.Verify(nonce))
 	})
 }

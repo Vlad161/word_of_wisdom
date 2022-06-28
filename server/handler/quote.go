@@ -27,6 +27,7 @@ func QuoteHandlerFunc() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+		w.Header().Add("Content-Type", "text/plain")
 		_, _ = w.Write(quotes[r.Intn(len(quotes))])
 	}
 }

@@ -66,15 +66,13 @@ LOOP:
 		}
 	}
 
-	hc.block.nonce = nonce
-	hc.block.hash = hash[:]
-	return hc.block.nonce, hc.block.hash, ok
+	return nonce, hash[:], ok
 }
 
-func (hc *hashCash) Verify() bool {
+func (hc *hashCash) Verify(nonce int) bool {
 	var hashInt big.Int
 
-	data := hc.prepareData(hc.block.nonce)
+	data := hc.prepareData(nonce)
 	hash := sha256.Sum256(data)
 	hashInt.SetBytes(hash[:])
 

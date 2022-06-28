@@ -81,6 +81,21 @@ func (mr *MockTokenStorageMockRecorder) Put(k, v interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), k, v)
 }
 
+// TargetBits mocks base method.
+func (m *MockTokenStorage) TargetBits(k string) (uint, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TargetBits", k)
+	ret0, _ := ret[0].(uint)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// TargetBits indicates an expected call of TargetBits.
+func (mr *MockTokenStorageMockRecorder) TargetBits(k interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TargetBits", reflect.TypeOf((*MockTokenStorage)(nil).TargetBits), k)
+}
+
 // Use mocks base method.
 func (m *MockTokenStorage) Use(k string) bool {
 	m.ctrl.T.Helper()
@@ -93,4 +108,18 @@ func (m *MockTokenStorage) Use(k string) bool {
 func (mr *MockTokenStorageMockRecorder) Use(k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Use", reflect.TypeOf((*MockTokenStorage)(nil).Use), k)
+}
+
+// Verify mocks base method.
+func (m *MockTokenStorage) Verify(k string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Verify", k)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Verify indicates an expected call of Verify.
+func (mr *MockTokenStorageMockRecorder) Verify(k interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockTokenStorage)(nil).Verify), k)
 }
