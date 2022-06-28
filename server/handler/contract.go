@@ -9,6 +9,6 @@ type Handler interface {
 }
 
 type TokenStorage interface {
-	Put(v string)
-	Verify(v string) bool
+	Put(k string, v uint)
+	Use(k string) bool
 }

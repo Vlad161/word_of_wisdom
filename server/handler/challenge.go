@@ -35,7 +35,7 @@ func (h *challengeHandler) challengeRequest(w http.ResponseWriter, req *http.Req
 
 func (h *challengeHandler) challengeVerify(w http.ResponseWriter, req *http.Request) {
 	t := token.New()
-	h.tStorage.Put(t)
+	h.tStorage.Put(t, uint(1))
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(t))

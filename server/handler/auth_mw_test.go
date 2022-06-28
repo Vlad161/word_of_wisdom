@@ -64,7 +64,7 @@ func TestAuthMW(t *testing.T) {
 
 			tokenStorage := NewMockTokenStorage(ctrl)
 			tokenStorage.EXPECT().
-				Verify(tc.tokenStorageVerify.Param1).Return(tc.tokenStorageVerify.Value1).Times(tc.tokenStorageVerify.Calls)
+				Use(tc.tokenStorageVerify.Param1).Return(tc.tokenStorageVerify.Value1).Times(tc.tokenStorageVerify.Calls)
 
 			handler.AuthMW(mockHandler, tokenStorage).ServeHTTP(w, req)
 

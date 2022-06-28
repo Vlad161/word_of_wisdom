@@ -70,27 +70,27 @@ func (m *MockTokenStorage) EXPECT() *MockTokenStorageMockRecorder {
 }
 
 // Put mocks base method.
-func (m *MockTokenStorage) Put(v string) {
+func (m *MockTokenStorage) Put(k string, v uint) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Put", v)
+	m.ctrl.Call(m, "Put", k, v)
 }
 
 // Put indicates an expected call of Put.
-func (mr *MockTokenStorageMockRecorder) Put(v interface{}) *gomock.Call {
+func (mr *MockTokenStorageMockRecorder) Put(k, v interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), v)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), k, v)
 }
 
-// Verify mocks base method.
-func (m *MockTokenStorage) Verify(v string) bool {
+// Use mocks base method.
+func (m *MockTokenStorage) Use(k string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Verify", v)
+	ret := m.ctrl.Call(m, "Use", k)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// Verify indicates an expected call of Verify.
-func (mr *MockTokenStorageMockRecorder) Verify(v interface{}) *gomock.Call {
+// Use indicates an expected call of Use.
+func (mr *MockTokenStorageMockRecorder) Use(k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockTokenStorage)(nil).Verify), v)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Use", reflect.TypeOf((*MockTokenStorage)(nil).Use), k)
 }

@@ -14,14 +14,15 @@ import (
 )
 
 const (
-	port = 8080
+	port              = 8080
+	authTokenLifetime = 10 * time.Second
 )
 
 func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
 
-	tokenStorage := token.NewStorage()
+	tokenStorage := token.NewStorage(ctx, authTokenLifetime)
 	challengeHandler := handler.NewChallengeHandler(tokenStorage)
 
 	mux := http.NewServeMux()
