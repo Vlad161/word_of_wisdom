@@ -123,3 +123,40 @@ func (mr *MockTokenStorageMockRecorder) Verify(k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockTokenStorage)(nil).Verify), k)
 }
+
+// MockPoW is a mock of PoW interface.
+type MockPoW struct {
+	ctrl     *gomock.Controller
+	recorder *MockPoWMockRecorder
+}
+
+// MockPoWMockRecorder is the mock recorder for MockPoW.
+type MockPoWMockRecorder struct {
+	mock *MockPoW
+}
+
+// NewMockPoW creates a new mock instance.
+func NewMockPoW(ctrl *gomock.Controller) *MockPoW {
+	mock := &MockPoW{ctrl: ctrl}
+	mock.recorder = &MockPoWMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPoW) EXPECT() *MockPoWMockRecorder {
+	return m.recorder
+}
+
+// Verify mocks base method.
+func (m *MockPoW) Verify(payload []byte, timestamp int64, targetBits uint, nonce int) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Verify", payload, timestamp, targetBits, nonce)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Verify indicates an expected call of Verify.
+func (mr *MockPoWMockRecorder) Verify(payload, timestamp, targetBits, nonce interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockPoW)(nil).Verify), payload, timestamp, targetBits, nonce)
+}

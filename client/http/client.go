@@ -10,28 +10,30 @@ type (
 	getChallengeRespBody struct {
 		Timestamp  int64  `json:"timestamp"`
 		Token      string `json:"token"`
-		TargetBits uint   `json:"targetBits"`
+		TargetBits uint   `json:"target_bits"`
 	}
 
 	postChallengeReqBody struct {
 		Timestamp  int64  `json:"timestamp"`
 		Token      string `json:"token"`
-		TargetBits uint   `json:"targetBits"`
+		TargetBits uint   `json:"target_bits"`
 		Nonce      int    `json:"nonce"`
 	}
 
 	client struct {
 		host      string
 		transport *http.Client
+		pow       PoW
 
 		authHeaderValue string
 	}
 )
 
-func NewClient(host string, transport *http.Client) *client {
+func NewClient(host string, transport *http.Client, pow PoW) *client {
 	return &client{
 		host:      host,
 		transport: transport,
+		pow:       pow,
 	}
 }
 

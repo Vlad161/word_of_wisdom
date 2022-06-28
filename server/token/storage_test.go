@@ -45,7 +45,6 @@ func TestStorage(t *testing.T) {
 	t.Run("multi goroutine read/write", func(t *testing.T) {
 		var (
 			gCount  = 10
-			maxJ    = 100
 			r       = rand.New(rand.NewSource(time.Now().Unix()))
 			storage = token.NewStorage(ctx, 1*time.Second)
 			wg      = sync.WaitGroup{}
@@ -54,8 +53,9 @@ func TestStorage(t *testing.T) {
 
 		wg.Add(gCount)
 		for i := 0; i < gCount; i++ {
+			maxJ := r.Intn(100)
 			go func() {
-				for j := 0; j < r.Intn(maxJ); j++ {
+				for j := 0; j < maxJ; j++ {
 					ts := token.New()
 					storage.Put(ts, v)
 					tb, _ := storage.TargetBits(ts)

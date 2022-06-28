@@ -10,16 +10,18 @@ import (
 	"time"
 
 	"word_of_wisdom/client/http"
+	"word_of_wisdom/pow"
 )
 
 func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 
 	ticker := time.NewTicker(1 * time.Second)
+	powAlg := pow.NewHashCash()
 
 	cl := http.NewClient("http://localhost:8080", &gohttp.Client{
 		Timeout: 3 * time.Second,
-	})
+	}, powAlg)
 
 	go func() {
 		for {

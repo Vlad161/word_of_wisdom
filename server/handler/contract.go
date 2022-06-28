@@ -14,3 +14,7 @@ type TokenStorage interface {
 	Verify(k string) bool
 	TargetBits(k string) (uint, bool)
 }
+
+type PoW interface {
+	Verify(payload []byte, timestamp int64, targetBits uint, nonce int) bool
+}

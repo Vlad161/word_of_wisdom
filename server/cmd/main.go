@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"word_of_wisdom/pow"
 	"word_of_wisdom/server/handler"
 	"word_of_wisdom/server/token"
 )
@@ -24,7 +25,8 @@ func main() {
 	defer cancelCtx()
 
 	tokenStorage := token.NewStorage(ctx, authTokenLifetime)
-	challengeHandler := handler.NewChallengeHandler(authTokenTargetBits, tokenStorage)
+	powAlg := pow.NewHashCash()
+	challengeHandler := handler.NewChallengeHandler(authTokenTargetBits, tokenStorage, powAlg)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/quote", handler.AuthMW(handler.QuoteHandlerFunc(), tokenStorage))

@@ -13,36 +13,21 @@ var (
 	maxNonce = math.MaxInt64
 )
 
-type (
-	block struct {
-		timestamp int64
-		data      []byte
-		hash      []byte
-		nonce     int
-	}
-
-	hashCash struct {
-		block      *block
-		target     *big.Int
-		targetBits uint
-	}
-)
-
-func NewHashCash(timestamp int64, data string, targetBits uint) *hashCash {
-	target := big.NewInt(1)
-	return &hashCash{
-		block:      &block{timestamp: timestamp, data: []byte(data), hash: []byte{}, nonce: 0},
-		target:     target.Lsh(target, 256-targetBits),
-		targetBits: targetBits,
-	}
+type hashCash struct {
 }
 
-func (hc *hashCash) Calculate(ctx context.Context) (int, []byte, bool) {
+func NewHashCash() *hashCash {
+	return &hashCash{}
+}
+
+func (hc *hashCash) Calculate(ctx context.Context, payload []byte, timestamp int64, targetBits uint) (int, []byte, bool) {
 	var (
-		hashInt big.Int
-		hash    [32]byte
-		ok      bool
-		nonce   = 0
+		hashInt   big.Int
+		hash      [32]byte
+		ok        bool
+		rawTarget = big.NewInt(1)
+		target    = rawTarget.Lsh(rawTarget, 256-targetBits)
+		nonce     = 0
 	)
 
 LOOP:
@@ -53,12 +38,12 @@ LOOP:
 		default:
 		}
 
-		data := hc.prepareData(nonce)
+		data := hc.prepareData(payload, timestamp, targetBits, nonce)
 
 		hash = sha256.Sum256(data)
 		hashInt.SetBytes(hash[:])
 
-		if hashInt.Cmp(hc.target) == -1 {
+		if hashInt.Cmp(target) == -1 {
 			ok = true
 			break
 		} else {
@@ -69,22 +54,26 @@ LOOP:
 	return nonce, hash[:], ok
 }
 
-func (hc *hashCash) Verify(nonce int) bool {
-	var hashInt big.Int
+func (hc *hashCash) Verify(payload []byte, timestamp int64, targetBits uint, nonce int) bool {
+	var (
+		hashInt   big.Int
+		rawTarget = big.NewInt(1)
+		target    = rawTarget.Lsh(rawTarget, 256-targetBits)
+	)
 
-	data := hc.prepareData(nonce)
+	data := hc.prepareData(payload, timestamp, targetBits, nonce)
 	hash := sha256.Sum256(data)
 	hashInt.SetBytes(hash[:])
 
-	return hashInt.Cmp(hc.target) == -1
+	return hashInt.Cmp(target) == -1
 }
 
-func (hc *hashCash) prepareData(nonce int) []byte {
+func (hc *hashCash) prepareData(payload []byte, timestamp int64, targetBits uint, nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
-			hc.block.data,
-			intToHex(hc.block.timestamp),
-			intToHex(int64(hc.targetBits)),
+			payload,
+			intToHex(timestamp),
+			intToHex(int64(targetBits)),
 			intToHex(int64(nonce)),
 		},
 		[]byte{},

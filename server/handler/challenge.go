@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"word_of_wisdom/pow"
 	"word_of_wisdom/server/token"
 )
 
@@ -13,26 +12,28 @@ type (
 	getChallengeRespBody struct {
 		Timestamp  int64  `json:"timestamp"`
 		Token      string `json:"token"`
-		TargetBits uint   `json:"targetBits"`
+		TargetBits uint   `json:"target_bits"`
 	}
 
 	postChallengeReqBody struct {
 		Timestamp  int64  `json:"timestamp"`
 		Token      string `json:"token"`
-		TargetBits uint   `json:"targetBits"`
+		TargetBits uint   `json:"target_bits"`
 		Nonce      int    `json:"nonce"`
 	}
 
 	challengeHandler struct {
 		targetBits uint
 		tStorage   TokenStorage
+		pow        PoW
 	}
 )
 
-func NewChallengeHandler(targetBits uint, tokenStorage TokenStorage) *challengeHandler {
+func NewChallengeHandler(targetBits uint, tokenStorage TokenStorage, pow PoW) *challengeHandler {
 	return &challengeHandler{
 		targetBits: targetBits,
 		tStorage:   tokenStorage,
+		pow:        pow,
 	}
 }
 
@@ -82,8 +83,8 @@ func (h *challengeHandler) challengeVerify(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	hc := pow.NewHashCash(reqBody.Timestamp, reqBody.Token, reqBody.TargetBits)
-	if sTargetBits == reqBody.TargetBits && hc.Verify(reqBody.Nonce) && h.tStorage.Verify(reqBody.Token) {
+	isPowVerify := h.pow.Verify([]byte(reqBody.Token), reqBody.Timestamp, reqBody.TargetBits, reqBody.Nonce)
+	if sTargetBits == reqBody.TargetBits && isPowVerify && h.tStorage.Verify(reqBody.Token) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}

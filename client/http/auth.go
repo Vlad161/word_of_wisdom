@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"word_of_wisdom/pow"
 )
 
 func (c *client) auth(ctx context.Context) error {
@@ -16,8 +14,7 @@ func (c *client) auth(ctx context.Context) error {
 		return err
 	}
 
-	hc := pow.NewHashCash(challengeData.Timestamp, challengeData.Token, challengeData.TargetBits)
-	nonce, _, ok := hc.Calculate(ctx)
+	nonce, _, ok := c.pow.Calculate(ctx, []byte(challengeData.Token), challengeData.Timestamp, challengeData.TargetBits)
 	if !ok {
 		return fmt.Errorf("can't calculate hashcash")
 	}

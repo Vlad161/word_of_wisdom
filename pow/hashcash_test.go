@@ -17,33 +17,33 @@ func TestHashCash(t *testing.T) {
 		var (
 			ctx, cancelCtx = context.WithTimeout(context.Background(), 1*time.Second)
 			timestamp      = time.Now().Unix()
-			data           = uuid.New().String()
+			payload        = []byte(uuid.New().String())
 			targetBits     = uint(14)
-			hc             = pow.NewHashCash(timestamp, data, targetBits)
+			hc             = pow.NewHashCash()
 		)
 		defer cancelCtx()
 
-		nonce, hash, ok := hc.Calculate(ctx)
+		nonce, hash, ok := hc.Calculate(ctx, payload, timestamp, targetBits)
 		fmt.Printf("nonce: %d, hash: %x \n", nonce, hash)
 
 		require.True(t, ok)
-		require.True(t, hc.Verify(nonce))
+		require.True(t, hc.Verify(payload, timestamp, targetBits, nonce))
 	})
 
 	t.Run("timeout exceeded", func(t *testing.T) {
 		var (
 			ctx, cancelCtx = context.WithTimeout(context.Background(), 1*time.Second)
 			timestamp      = time.Now().Unix()
-			data           = uuid.New().String()
+			payload        = []byte(uuid.New().String())
 			targetBits     = uint(48)
-			hc             = pow.NewHashCash(timestamp, data, targetBits)
+			hc             = pow.NewHashCash()
 		)
 		defer cancelCtx()
 
-		nonce, hash, ok := hc.Calculate(ctx)
+		nonce, hash, ok := hc.Calculate(ctx, payload, timestamp, targetBits)
 		fmt.Printf("nonce: %d, hash: %x \n", nonce, hash)
 
 		require.False(t, ok)
-		require.False(t, hc.Verify(nonce))
+		require.False(t, hc.Verify(payload, timestamp, targetBits, nonce))
 	})
 }

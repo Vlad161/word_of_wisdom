@@ -13,7 +13,7 @@ type (
 	}
 
 	storage struct {
-		sync.RWMutex
+		mux       sync.RWMutex
 		tokens    map[string]*value
 		oldTokens map[string]*value
 	}
@@ -32,17 +32,17 @@ func NewStorage(ctx context.Context, tokenLifeTime time.Duration) *storage {
 }
 
 func (s *storage) Put(k string, v uint) {
-	s.Lock()
+	s.mux.Lock()
 	s.tokens[k] = &value{targetBits: v}
-	s.Unlock()
+	s.mux.Unlock()
 }
 
 func (s *storage) Use(k string) bool {
 	if v, ok := s.get(k); ok && v.isVerified {
-		s.Lock()
+		s.mux.Lock()
 		delete(s.tokens, k)
 		delete(s.oldTokens, k)
-		s.Unlock()
+		s.mux.Unlock()
 		return true
 	}
 	return false
@@ -50,9 +50,9 @@ func (s *storage) Use(k string) bool {
 
 func (s *storage) Verify(k string) bool {
 	if v, ok := s.get(k); ok {
-		s.Lock()
+		s.mux.Lock()
 		v.isVerified = true
-		s.Unlock()
+		s.mux.Unlock()
 		return true
 	}
 	return false
@@ -66,8 +66,8 @@ func (s *storage) TargetBits(k string) (uint, bool) {
 }
 
 func (s *storage) get(k string) (*value, bool) {
-	s.RLock()
-	defer s.RUnlock()
+	s.mux.RLock()
+	defer s.mux.RUnlock()
 
 	if v, ok := s.tokens[k]; ok {
 		return v, ok
@@ -85,10 +85,10 @@ func (s *storage) cleanupWorker(ctx context.Context, tokenLifeTime time.Duration
 		for {
 			select {
 			case <-ticker.C:
-				s.Lock()
+				s.mux.Lock()
 				s.oldTokens = s.tokens
 				s.tokens = make(map[string]*value)
-				s.Unlock()
+				s.mux.Unlock()
 			case <-ctx.Done():
 				return
 			}
