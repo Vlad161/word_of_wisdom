@@ -5,8 +5,8 @@ WORKDIR /src
 COPY go.* ./
 RUN go mod download
 
-COPY ./server /src/server
-COPY ./pow /src/pow
+COPY ./server ./server
+COPY ./pow ./pow
 
 RUN CGO_ENABLED=0 go build -o ./bin/server ./server/cmd
 
@@ -14,6 +14,6 @@ FROM alpine:latest
 
 WORKDIR /app
 
-COPY --from=build /src/bin/server /app/server
+COPY --from=build /src/bin/server ./server
 
-ENTRYPOINT ["/app/server"]
+ENTRYPOINT ["./server"]
