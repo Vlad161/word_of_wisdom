@@ -15,26 +15,29 @@ import (
 
 func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
+	defer cancelCtx()
 
 	ticker := time.NewTicker(1 * time.Second)
-	powAlg := pow.NewHashCash()
+	defer ticker.Stop()
 
 	cl := http.NewClient("http://server:8001", &gohttp.Client{
 		Timeout: 3 * time.Second,
-	}, powAlg)
+	}, pow.NewHashCash())
 
 	go func() {
+	LOOP:
 		for {
 			select {
 			case <-ticker.C:
 				fmt.Println(cl.GetQuote(ctx))
+			case <-ctx.Done():
+				break LOOP
 			}
 		}
 	}()
 
 	// Waiting OS signals or context cancellation
 	wait(ctx)
-	cancelCtx()
 }
 
 func wait(ctx context.Context) {
