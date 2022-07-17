@@ -3,6 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,47 +47,47 @@ func TestChallengeHandler_Post(t *testing.T) {
 	)
 
 	tests := []struct {
-		name              string
-		reqBody           []byte
-		storageTargetBits test.MockContract
-		storageVerify     test.MockContract
-		powVerify         test.MockContract
+		name          string
+		reqBody       []byte
+		storageGet    test.MockContract
+		storageVerify test.MockContract
+		powVerify     test.MockContract
 
 		expectedCode int
 	}{
 		{
-			name:              "200, ok",
-			reqBody:           []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
-			storageTargetBits: test.MockContract{Param1: "token_123", Value1: uint(14), Value2: true, Calls: 1},
-			storageVerify:     test.MockContract{Param1: "token_123", Value1: true, Calls: 1},
-			powVerify:         test.MockContract{Param1: []byte("token_123"), Param2: int64(1234), Param3: targetBits, Param4: 3456, Value1: true, Calls: 1},
+			name:          "200, ok",
+			reqBody:       []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
+			storageGet:    test.MockContract{Param1: "token_123", Value1: uint(14), Calls: 1},
+			storageVerify: test.MockContract{Param1: "token_123", Value1: nil, Calls: 1},
+			powVerify:     test.MockContract{Param1: []byte("token_123"), Param2: int64(1234), Param3: targetBits, Param4: 3456, Value1: true, Calls: 1},
 
 			expectedCode: http.StatusOK,
 		},
 		{
-			name:              "500, storage target bits error",
-			reqBody:           []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
-			storageTargetBits: test.MockContract{Param1: "token_123", Value1: uint(14), Value2: false, Calls: 1},
-			storageVerify:     test.MockContract{Value1: true},
-			powVerify:         test.MockContract{Value1: true},
+			name:          "500, storage target bits error",
+			reqBody:       []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
+			storageGet:    test.MockContract{Param1: "token_123", Value1: uint(14), Value2: errors.New("error"), Calls: 1},
+			storageVerify: test.MockContract{Value1: nil},
+			powVerify:     test.MockContract{Value1: true},
 
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
-			name:              "500, pow verify error",
-			reqBody:           []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
-			storageTargetBits: test.MockContract{Param1: "token_123", Value1: uint(14), Value2: true, Calls: 1},
-			storageVerify:     test.MockContract{Value1: true},
-			powVerify:         test.MockContract{Param1: []byte("token_123"), Param2: int64(1234), Param3: targetBits, Param4: 3456, Value1: false, Calls: 1},
+			name:          "500, pow verify error",
+			reqBody:       []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
+			storageGet:    test.MockContract{Param1: "token_123", Value1: uint(14), Calls: 1},
+			storageVerify: test.MockContract{Value1: nil},
+			powVerify:     test.MockContract{Param1: []byte("token_123"), Param2: int64(1234), Param3: targetBits, Param4: 3456, Value1: false, Calls: 1},
 
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
-			name:              "500, storage verify error",
-			reqBody:           []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
-			storageTargetBits: test.MockContract{Param1: "token_123", Value1: uint(14), Value2: true, Calls: 1},
-			storageVerify:     test.MockContract{Param1: "token_123", Value1: false, Calls: 1},
-			powVerify:         test.MockContract{Param1: []byte("token_123"), Param2: int64(1234), Param3: targetBits, Param4: 3456, Value1: true, Calls: 1},
+			name:          "500, storage verify error",
+			reqBody:       []byte(`{"timestamp": 1234, "token": "token_123", "target_bits": 14, "nonce": 3456}`),
+			storageGet:    test.MockContract{Param1: "token_123", Value1: uint(14), Calls: 1},
+			storageVerify: test.MockContract{Param1: "token_123", Value1: errors.New("error"), Calls: 1},
+			powVerify:     test.MockContract{Param1: []byte("token_123"), Param2: int64(1234), Param3: targetBits, Param4: 3456, Value1: true, Calls: 1},
 
 			expectedCode: http.StatusInternalServerError,
 		},
@@ -100,8 +101,8 @@ func TestChallengeHandler_Post(t *testing.T) {
 
 			tokenStorage := NewMockTokenStorage(ctrl)
 			tokenStorage.EXPECT().
-				TargetBits(tc.storageTargetBits.Param1).
-				Return(tc.storageTargetBits.Value1, tc.storageTargetBits.Value2).Times(tc.storageTargetBits.Calls)
+				Get(tc.storageGet.Param1).
+				Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
 			tokenStorage.EXPECT().
 				Verify(tc.storageVerify.Param1).Return(tc.storageVerify.Value1).Times(tc.storageVerify.Calls)
 

@@ -59,12 +59,10 @@ func (h *challengeHandler) challengeRequest(w http.ResponseWriter, _ *http.Reque
 		TargetBits: h.targetBits,
 	}
 	bb, err := json.Marshal(&respBody)
-	if err != nil {
+	if err != nil || h.tStorage.Put(tc, h.targetBits) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	h.tStorage.Put(tc, h.targetBits)
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(bb)
@@ -77,14 +75,14 @@ func (h *challengeHandler) challengeVerify(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	sTargetBits, ok := h.tStorage.TargetBits(reqBody.Token)
-	if !ok {
+	sTargetBits, err := h.tStorage.Get(reqBody.Token)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	isPowVerify := h.pow.Verify([]byte(reqBody.Token), reqBody.Timestamp, reqBody.TargetBits, reqBody.Nonce)
-	if sTargetBits == reqBody.TargetBits && isPowVerify && h.tStorage.Verify(reqBody.Token) {
+	if sTargetBits == reqBody.TargetBits && isPowVerify && h.tStorage.Verify(reqBody.Token) == nil {
 		w.WriteHeader(http.StatusOK)
 		return
 	}

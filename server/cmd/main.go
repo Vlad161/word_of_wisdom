@@ -11,6 +11,7 @@ import (
 
 	"word_of_wisdom/pow"
 	"word_of_wisdom/server/handler"
+	"word_of_wisdom/server/storage"
 	"word_of_wisdom/server/token"
 )
 
@@ -24,7 +25,8 @@ func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
 
-	tokenStorage := token.NewStorage(ctx, authTokenLifetime)
+	localStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
+	tokenStorage := token.NewOnetimeStorage(localStorage)
 	powAlg := pow.NewHashCash()
 	challengeHandler := handler.NewChallengeHandler(authTokenTargetBits, tokenStorage, powAlg)
 

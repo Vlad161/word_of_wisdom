@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,20 +30,20 @@ func TestAuthMW(t *testing.T) {
 			name:               "ok, 200",
 			authHeader:         "Bearer token_123",
 			mockHandler:        test.MockContract{Calls: 1},
-			tokenStorageVerify: test.MockContract{Param1: "token_123", Value1: true, Calls: 1},
+			tokenStorageVerify: test.MockContract{Param1: "token_123", Value1: nil, Calls: 1},
 
 			expectedCode: http.StatusOK,
 		},
 		{
 			name:               "empty auth header, 401",
-			tokenStorageVerify: test.MockContract{Value1: false},
+			tokenStorageVerify: test.MockContract{Value1: errors.New("error")},
 
 			expectedCode: http.StatusUnauthorized,
 		},
 		{
 			name:               "can't verify token, 401",
 			authHeader:         "Bearer token_123",
-			tokenStorageVerify: test.MockContract{Param1: "token_123", Value1: false, Calls: 1},
+			tokenStorageVerify: test.MockContract{Param1: "token_123", Value1: errors.New("error"), Calls: 1},
 
 			expectedCode: http.StatusUnauthorized,
 		},

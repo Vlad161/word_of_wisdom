@@ -1,9 +1,12 @@
 package token
 
 import (
-	"context"
-	"sync"
-	"time"
+	"errors"
+)
+
+var (
+	ErrCastValue        = errors.New("can't cast to value struct")
+	ErrTokenNotVerified = errors.New("token is not verified")
 )
 
 type (
@@ -12,86 +15,61 @@ type (
 		isVerified bool
 	}
 
-	storage struct {
-		mux       sync.RWMutex
-		tokens    map[string]*value
-		oldTokens map[string]*value
+	onetimeStorage struct {
+		storage Storage
 	}
 )
 
-// NewStorage is a single use tokens storage. After successful verify token delete from storage.
+// NewOnetimeStorage is a single use tokens storage. Once a verified token has been used, it is removed from storage.
 // Token guaranteed storage at least tokenLifeTime duration.
-func NewStorage(ctx context.Context, tokenLifeTime time.Duration) *storage {
-	s := &storage{
-		tokens:    make(map[string]*value),
-		oldTokens: make(map[string]*value),
+func NewOnetimeStorage(storage Storage) *onetimeStorage {
+	return &onetimeStorage{
+		storage: storage,
+	}
+}
+
+func (s *onetimeStorage) Get(k string) (uint, error) {
+	v, err := s.get(k)
+	if err != nil {
+		return 0, err
+	}
+	return v.targetBits, nil
+}
+
+func (s *onetimeStorage) Put(k string, targetBits uint) error {
+	return s.storage.Put(k, value{targetBits: targetBits})
+}
+
+func (s *onetimeStorage) Use(k string) error {
+	v, err := s.get(k)
+	if err != nil {
+		return err
 	}
 
-	s.cleanupWorker(ctx, tokenLifeTime)
-	return s
-}
-
-func (s *storage) Put(k string, v uint) {
-	s.mux.Lock()
-	s.tokens[k] = &value{targetBits: v}
-	s.mux.Unlock()
-}
-
-func (s *storage) Use(k string) bool {
-	if v, ok := s.get(k); ok && v.isVerified {
-		s.mux.Lock()
-		delete(s.tokens, k)
-		delete(s.oldTokens, k)
-		s.mux.Unlock()
-		return true
+	if !v.isVerified {
+		return ErrTokenNotVerified
 	}
-	return false
+	return s.storage.Delete(k)
 }
 
-func (s *storage) Verify(k string) bool {
-	if v, ok := s.get(k); ok {
-		s.mux.Lock()
-		v.isVerified = true
-		s.mux.Unlock()
-		return true
+func (s *onetimeStorage) Verify(k string) error {
+	v, err := s.get(k)
+	if err != nil {
+		return err
 	}
-	return false
+
+	v.isVerified = true
+	return s.storage.Put(k, v)
 }
 
-func (s *storage) TargetBits(k string) (uint, bool) {
-	if v, ok := s.get(k); ok {
-		return v.targetBits, true
+func (s *onetimeStorage) get(k string) (empty value, _ error) {
+	v, err := s.storage.Get(k)
+	if err != nil {
+		return empty, err
 	}
-	return 0, false
-}
-
-func (s *storage) get(k string) (*value, bool) {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-
-	if v, ok := s.tokens[k]; ok {
-		return v, ok
+	tv, tOk := v.(value)
+	if !tOk {
+		return empty, ErrCastValue
 	}
-	v, ok := s.oldTokens[k]
-	return v, ok
-}
-
-// Primitive realisation to store token at least tokenLifeTime duration. Not guarantee to store token not more tokenLifeTime duration.
-func (s *storage) cleanupWorker(ctx context.Context, tokenLifeTime time.Duration) {
-	go func() {
-		ticker := time.NewTicker(tokenLifeTime)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ticker.C:
-				s.mux.Lock()
-				s.oldTokens = s.tokens
-				s.tokens = make(map[string]*value)
-				s.mux.Unlock()
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
+	return tv, nil
 }

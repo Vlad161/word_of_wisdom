@@ -69,38 +69,40 @@ func (m *MockTokenStorage) EXPECT() *MockTokenStorageMockRecorder {
 	return m.recorder
 }
 
-// Put mocks base method.
-func (m *MockTokenStorage) Put(k string, v uint) {
+// Get mocks base method.
+func (m *MockTokenStorage) Get(k string) (uint, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Put", k, v)
-}
-
-// Put indicates an expected call of Put.
-func (mr *MockTokenStorageMockRecorder) Put(k, v interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), k, v)
-}
-
-// TargetBits mocks base method.
-func (m *MockTokenStorage) TargetBits(k string) (uint, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TargetBits", k)
+	ret := m.ctrl.Call(m, "Get", k)
 	ret0, _ := ret[0].(uint)
-	ret1, _ := ret[1].(bool)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TargetBits indicates an expected call of TargetBits.
-func (mr *MockTokenStorageMockRecorder) TargetBits(k interface{}) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockTokenStorageMockRecorder) Get(k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TargetBits", reflect.TypeOf((*MockTokenStorage)(nil).TargetBits), k)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockTokenStorage)(nil).Get), k)
+}
+
+// Put mocks base method.
+func (m *MockTokenStorage) Put(k string, targetBits uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Put", k, targetBits)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Put indicates an expected call of Put.
+func (mr *MockTokenStorageMockRecorder) Put(k, targetBits interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), k, targetBits)
 }
 
 // Use mocks base method.
-func (m *MockTokenStorage) Use(k string) bool {
+func (m *MockTokenStorage) Use(k string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Use", k)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -111,10 +113,10 @@ func (mr *MockTokenStorageMockRecorder) Use(k interface{}) *gomock.Call {
 }
 
 // Verify mocks base method.
-func (m *MockTokenStorage) Verify(k string) bool {
+func (m *MockTokenStorage) Verify(k string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Verify", k)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

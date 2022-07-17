@@ -9,10 +9,10 @@ type Handler interface {
 }
 
 type TokenStorage interface {
-	Put(k string, v uint)
-	Use(k string) bool
-	Verify(k string) bool
-	TargetBits(k string) (uint, bool)
+	Get(k string) (uint, error)
+	Put(k string, targetBits uint) error
+	Use(k string) error
+	Verify(k string) error
 }
 
 type PoW interface {
