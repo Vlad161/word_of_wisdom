@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -44,6 +45,9 @@ func (c *client) getChallenge(ctx context.Context) (getChallengeRespBody, error)
 	resp, err := c.transport.Do(req)
 	if err != nil {
 		return respBody, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return respBody, errors.New("can't get challenge")
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&respBody)

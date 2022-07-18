@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -47,6 +48,9 @@ func (c *client) GetQuote(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("can't get quote, status code: %d", resp.StatusCode)
+	}
 
 	bb, err := ioutil.ReadAll(resp.Body)
 	return string(bb), err
@@ -55,7 +59,7 @@ func (c *client) GetQuote(ctx context.Context) (string, error) {
 func (c *client) doAuthRequest(ctx context.Context, req *http.Request, retry bool) (*http.Response, error) {
 	resp, err := c.transport.Do(req)
 	if resp != nil && resp.StatusCode == http.StatusUnauthorized && !retry {
-		if err := c.auth(ctx); err == nil {
+		if err = c.auth(ctx); err == nil {
 			req.Header.Add("Authorization", "Bearer "+c.authHeaderValue)
 			return c.doAuthRequest(ctx, req, true)
 		}
