@@ -5,6 +5,7 @@
 package token_test
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,44 +35,110 @@ func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockStorage) Delete(k string) error {
+func (m *MockStorage) Delete(ctx context.Context, k string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", k)
+	ret := m.ctrl.Call(m, "Delete", ctx, k)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockStorageMockRecorder) Delete(k interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) Delete(ctx, k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorage)(nil).Delete), k)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorage)(nil).Delete), ctx, k)
 }
 
 // Get mocks base method.
-func (m *MockStorage) Get(k string) (interface{}, error) {
+func (m *MockStorage) Get(ctx context.Context, k string) (interface{}, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", k)
+	ret := m.ctrl.Call(m, "Get", ctx, k)
 	ret0, _ := ret[0].(interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockStorageMockRecorder) Get(k interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) Get(ctx, k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorage)(nil).Get), k)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorage)(nil).Get), ctx, k)
 }
 
 // Put mocks base method.
-func (m *MockStorage) Put(k string, v interface{}) error {
+func (m *MockStorage) Put(ctx context.Context, k string, v interface{}) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Put", k, v)
+	ret := m.ctrl.Call(m, "Put", ctx, k, v)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Put indicates an expected call of Put.
-func (mr *MockStorageMockRecorder) Put(k, v interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) Put(ctx, k, v interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockStorage)(nil).Put), k, v)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockStorage)(nil).Put), ctx, k, v)
+}
+
+// MockStorageBytes is a mock of StorageBytes interface.
+type MockStorageBytes struct {
+	ctrl     *gomock.Controller
+	recorder *MockStorageBytesMockRecorder
+}
+
+// MockStorageBytesMockRecorder is the mock recorder for MockStorageBytes.
+type MockStorageBytesMockRecorder struct {
+	mock *MockStorageBytes
+}
+
+// NewMockStorageBytes creates a new mock instance.
+func NewMockStorageBytes(ctrl *gomock.Controller) *MockStorageBytes {
+	mock := &MockStorageBytes{ctrl: ctrl}
+	mock.recorder = &MockStorageBytesMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockStorageBytes) EXPECT() *MockStorageBytesMockRecorder {
+	return m.recorder
+}
+
+// Delete mocks base method.
+func (m *MockStorageBytes) Delete(ctx context.Context, k string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, k)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockStorageBytesMockRecorder) Delete(ctx, k interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorageBytes)(nil).Delete), ctx, k)
+}
+
+// Get mocks base method.
+func (m *MockStorageBytes) Get(ctx context.Context, k string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, k)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockStorageBytesMockRecorder) Get(ctx, k interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorageBytes)(nil).Get), ctx, k)
+}
+
+// Put mocks base method.
+func (m *MockStorageBytes) Put(ctx context.Context, k string, v []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Put", ctx, k, v)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Put indicates an expected call of Put.
+func (mr *MockStorageBytesMockRecorder) Put(ctx, k, v interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockStorageBytes)(nil).Put), ctx, k, v)
 }

@@ -1,6 +1,7 @@
 package token_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -17,8 +18,10 @@ var (
 
 func TestNewOnetimeStorage_Get(t *testing.T) {
 	var (
-		ctrl = gomock.NewController(t)
+		ctrl           = gomock.NewController(t)
+		ctx, ctxCancel = context.WithCancel(context.Background())
 	)
+	defer ctxCancel()
 
 	tests := []struct {
 		name string
@@ -50,9 +53,9 @@ func TestNewOnetimeStorage_Get(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			stor := NewMockStorage(ctrl)
 			stor.EXPECT().
-				Get(tc.storageGet.Param1).Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
+				Get(ctx, tc.storageGet.Param1).Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
 
-			v, err := token.NewOnetimeStorage(stor).Get("key")
+			v, err := token.NewOnetimeStorage(stor).Get(ctx, "key")
 			if tc.expectedError != nil {
 				require.Equal(t, tc.expectedError, err)
 				return
@@ -66,8 +69,10 @@ func TestNewOnetimeStorage_Get(t *testing.T) {
 
 func TestNewOnetimeStorage_Put(t *testing.T) {
 	var (
-		ctrl = gomock.NewController(t)
+		ctrl           = gomock.NewController(t)
+		ctx, ctxCancel = context.WithCancel(context.Background())
 	)
+	defer ctxCancel()
 
 	tests := []struct {
 		name string
@@ -93,9 +98,9 @@ func TestNewOnetimeStorage_Put(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			stor := NewMockStorage(ctrl)
 			stor.EXPECT().
-				Put(tc.storagePut.Param1, tc.storagePut.Param2).Return(tc.storagePut.Value1).Times(tc.storagePut.Calls)
+				Put(ctx, tc.storagePut.Param1, tc.storagePut.Param2).Return(tc.storagePut.Value1).Times(tc.storagePut.Calls)
 
-			err := token.NewOnetimeStorage(stor).Put("key", 1)
+			err := token.NewOnetimeStorage(stor).Put(ctx, "key", 1)
 			require.Equal(t, tc.expectedError, err)
 		})
 	}
@@ -103,8 +108,10 @@ func TestNewOnetimeStorage_Put(t *testing.T) {
 
 func TestNewOnetimeStorage_Use(t *testing.T) {
 	var (
-		ctrl = gomock.NewController(t)
+		ctrl           = gomock.NewController(t)
+		ctx, ctxCancel = context.WithCancel(context.Background())
 	)
+	defer ctxCancel()
 
 	tests := []struct {
 		name string
@@ -143,11 +150,11 @@ func TestNewOnetimeStorage_Use(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			stor := NewMockStorage(ctrl)
 			stor.EXPECT().
-				Get(tc.storageGet.Param1).Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
+				Get(ctx, tc.storageGet.Param1).Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
 			stor.EXPECT().
-				Delete(tc.storageDelete.Param1).Return(tc.storageDelete.Value1).Times(tc.storageDelete.Calls)
+				Delete(ctx, tc.storageDelete.Param1).Return(tc.storageDelete.Value1).Times(tc.storageDelete.Calls)
 
-			err := token.NewOnetimeStorage(stor).Use("key")
+			err := token.NewOnetimeStorage(stor).Use(ctx, "key")
 			require.Equal(t, tc.expectedError, err)
 		})
 	}
@@ -155,8 +162,10 @@ func TestNewOnetimeStorage_Use(t *testing.T) {
 
 func TestNewOnetimeStorage_Verify(t *testing.T) {
 	var (
-		ctrl = gomock.NewController(t)
+		ctrl           = gomock.NewController(t)
+		ctx, ctxCancel = context.WithCancel(context.Background())
 	)
+	defer ctxCancel()
 
 	tests := []struct {
 		name string
@@ -190,11 +199,11 @@ func TestNewOnetimeStorage_Verify(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			stor := NewMockStorage(ctrl)
 			stor.EXPECT().
-				Get(tc.storageGet.Param1).Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
+				Get(ctx, tc.storageGet.Param1).Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
 			stor.EXPECT().
-				Put(tc.storagePut.Param1, tc.storagePut.Param2).Return(tc.storagePut.Value1).Times(tc.storagePut.Calls)
+				Put(ctx, tc.storagePut.Param1, tc.storagePut.Param2).Return(tc.storagePut.Value1).Times(tc.storagePut.Calls)
 
-			err := token.NewOnetimeStorage(stor).Verify("key")
+			err := token.NewOnetimeStorage(stor).Verify(ctx, "key")
 			require.Equal(t, tc.expectedError, err)
 		})
 	}

@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-redis/redis/v9"
+
 	"word_of_wisdom/pow"
 	"word_of_wisdom/server/handler"
 	"word_of_wisdom/server/storage"
@@ -25,8 +27,12 @@ func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
 
-	localStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
-	tokenStorage := token.NewOnetimeStorage(localStorage)
+	rdb := redis.NewClient(&redis.Options{Addr: "redis:6379"})
+
+	//localStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
+	redisStorage := token.NewStorageBytesAdapter(storage.NewRedis(rdb, authTokenLifetime))
+
+	tokenStorage := token.NewOnetimeStorage(redisStorage)
 	powAlg := pow.NewHashCash()
 	challengeHandler := handler.NewChallengeHandler(authTokenTargetBits, tokenStorage, powAlg)
 

@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"errors"
 )
 
@@ -11,8 +12,8 @@ var (
 
 type (
 	value struct {
-		targetBits uint
-		isVerified bool
+		TargetBits uint
+		IsVerified bool
 	}
 
 	onetimeStorage struct {
@@ -28,42 +29,42 @@ func NewOnetimeStorage(storage Storage) *onetimeStorage {
 	}
 }
 
-func (s *onetimeStorage) Get(k string) (uint, error) {
-	v, err := s.get(k)
+func (s *onetimeStorage) Get(ctx context.Context, k string) (uint, error) {
+	v, err := s.get(ctx, k)
 	if err != nil {
 		return 0, err
 	}
-	return v.targetBits, nil
+	return v.TargetBits, nil
 }
 
-func (s *onetimeStorage) Put(k string, targetBits uint) error {
-	return s.storage.Put(k, value{targetBits: targetBits})
+func (s *onetimeStorage) Put(ctx context.Context, k string, targetBits uint) error {
+	return s.storage.Put(ctx, k, value{TargetBits: targetBits})
 }
 
-func (s *onetimeStorage) Use(k string) error {
-	v, err := s.get(k)
+func (s *onetimeStorage) Use(ctx context.Context, k string) error {
+	v, err := s.get(ctx, k)
 	if err != nil {
 		return err
 	}
 
-	if !v.isVerified {
+	if !v.IsVerified {
 		return ErrTokenNotVerified
 	}
-	return s.storage.Delete(k)
+	return s.storage.Delete(ctx, k)
 }
 
-func (s *onetimeStorage) Verify(k string) error {
-	v, err := s.get(k)
+func (s *onetimeStorage) Verify(ctx context.Context, k string) error {
+	v, err := s.get(ctx, k)
 	if err != nil {
 		return err
 	}
 
-	v.isVerified = true
-	return s.storage.Put(k, v)
+	v.IsVerified = true
+	return s.storage.Put(ctx, k, v)
 }
 
-func (s *onetimeStorage) get(k string) (empty value, _ error) {
-	v, err := s.storage.Get(k)
+func (s *onetimeStorage) get(ctx context.Context, k string) (empty value, _ error) {
+	v, err := s.storage.Get(ctx, k)
 	if err != nil {
 		return empty, err
 	}

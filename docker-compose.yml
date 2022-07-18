@@ -1,5 +1,9 @@
 version: "3.8"
 services:
+  redis:
+    image: redis:7.0.3
+    container_name: word_of_wisdom_redis
+    restart: unless-stopped
   client:
     build:
       dockerfile: client/Dockerfile
@@ -11,6 +15,6 @@ services:
     build:
       dockerfile: server/Dockerfile
     container_name: word_of_wisdom_server
-    ports:
-      - "8001:8001"
+    depends_on:
+      - redis
     restart: unless-stopped

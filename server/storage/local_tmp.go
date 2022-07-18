@@ -22,7 +22,7 @@ func NewLocalTemporary(ctx context.Context, ttl time.Duration) *localTemporary {
 	return s
 }
 
-func (s *localTemporary) Get(k string) (interface{}, error) {
+func (s *localTemporary) Get(_ context.Context, k string) (interface{}, error) {
 	s.mux.RLock()
 	defer s.mux.RUnlock()
 
@@ -34,15 +34,15 @@ func (s *localTemporary) Get(k string) (interface{}, error) {
 	return nil, ErrNotFound
 }
 
-func (s *localTemporary) Put(k string, v interface{}) error {
+func (s *localTemporary) Put(_ context.Context, k string, v interface{}) error {
 	s.mux.Lock()
 	s.tokens[k] = v
 	s.mux.Unlock()
 	return nil
 }
 
-func (s *localTemporary) Delete(k string) error {
-	if _, err := s.Get(k); err != nil {
+func (s *localTemporary) Delete(ctx context.Context, k string) error {
+	if _, err := s.Get(ctx, k); err != nil {
 		return err
 	}
 

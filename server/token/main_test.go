@@ -3,5 +3,5 @@
 package token
 
 func NewTestPrivateValue(targetBits uint, isVerified bool) value {
-	return value{targetBits: targetBits, isVerified: isVerified}
+	return value{TargetBits: targetBits, IsVerified: isVerified}
 }

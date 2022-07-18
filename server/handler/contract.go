@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 )
 
@@ -9,10 +10,10 @@ type Handler interface {
 }
 
 type TokenStorage interface {
-	Get(k string) (uint, error)
-	Put(k string, targetBits uint) error
-	Use(k string) error
-	Verify(k string) error
+	Get(ctx context.Context, k string) (uint, error)
+	Put(ctx context.Context, k string, targetBits uint) error
+	Use(ctx context.Context, k string) error
+	Verify(ctx context.Context, k string) error
 }
 
 type PoW interface {

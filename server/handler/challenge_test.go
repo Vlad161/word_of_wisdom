@@ -27,7 +27,7 @@ func TestChallengeHandler_GET(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		tokenStorage := NewMockTokenStorage(ctrl)
-		tokenStorage.EXPECT().Put(gomock.Any(), targetBits).Times(1)
+		tokenStorage.EXPECT().Put(gomock.Any(), gomock.Any(), targetBits).Times(1)
 
 		handler.NewChallengeHandler(targetBits, tokenStorage, nil).Handler().ServeHTTP(w, req)
 
@@ -101,10 +101,10 @@ func TestChallengeHandler_Post(t *testing.T) {
 
 			tokenStorage := NewMockTokenStorage(ctrl)
 			tokenStorage.EXPECT().
-				Get(tc.storageGet.Param1).
+				Get(gomock.Any(), tc.storageGet.Param1).
 				Return(tc.storageGet.Value1, tc.storageGet.Value2).Times(tc.storageGet.Calls)
 			tokenStorage.EXPECT().
-				Verify(tc.storageVerify.Param1).Return(tc.storageVerify.Value1).Times(tc.storageVerify.Calls)
+				Verify(gomock.Any(), tc.storageVerify.Param1).Return(tc.storageVerify.Value1).Times(tc.storageVerify.Calls)
 
 			powAlg := NewMockPoW(ctrl)
 			powAlg.EXPECT().Verify(tc.powVerify.Param1, tc.powVerify.Param2, tc.powVerify.Param3, tc.powVerify.Param4).
