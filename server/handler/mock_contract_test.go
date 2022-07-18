@@ -8,6 +8,8 @@ import (
 	context "context"
 	http "net/http"
 	reflect "reflect"
+	time "time"
+	jwt "word_of_wisdom/server/jwt"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -71,12 +73,11 @@ func (m *MockTokenStorage) EXPECT() *MockTokenStorageMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockTokenStorage) Get(ctx context.Context, k string) (uint, error) {
+func (m *MockTokenStorage) Get(ctx context.Context, k string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, k)
-	ret0, _ := ret[0].(uint)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Get indicates an expected call of Get.
@@ -86,17 +87,17 @@ func (mr *MockTokenStorageMockRecorder) Get(ctx, k interface{}) *gomock.Call {
 }
 
 // Put mocks base method.
-func (m *MockTokenStorage) Put(ctx context.Context, k string, targetBits uint) error {
+func (m *MockTokenStorage) Put(ctx context.Context, k string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Put", ctx, k, targetBits)
+	ret := m.ctrl.Call(m, "Put", ctx, k)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Put indicates an expected call of Put.
-func (mr *MockTokenStorageMockRecorder) Put(ctx, k, targetBits interface{}) *gomock.Call {
+func (mr *MockTokenStorageMockRecorder) Put(ctx, k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), ctx, k, targetBits)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockTokenStorage)(nil).Put), ctx, k)
 }
 
 // Use mocks base method.
@@ -111,20 +112,6 @@ func (m *MockTokenStorage) Use(ctx context.Context, k string) error {
 func (mr *MockTokenStorageMockRecorder) Use(ctx, k interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Use", reflect.TypeOf((*MockTokenStorage)(nil).Use), ctx, k)
-}
-
-// Verify mocks base method.
-func (m *MockTokenStorage) Verify(ctx context.Context, k string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Verify", ctx, k)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Verify indicates an expected call of Verify.
-func (mr *MockTokenStorageMockRecorder) Verify(ctx, k interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockTokenStorage)(nil).Verify), ctx, k)
 }
 
 // MockPoW is a mock of PoW interface.
@@ -162,4 +149,57 @@ func (m *MockPoW) Verify(payload []byte, timestamp int64, targetBits uint, nonce
 func (mr *MockPoWMockRecorder) Verify(payload, timestamp, targetBits, nonce interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockPoW)(nil).Verify), payload, timestamp, targetBits, nonce)
+}
+
+// MockJWTService is a mock of JWTService interface.
+type MockJWTService struct {
+	ctrl     *gomock.Controller
+	recorder *MockJWTServiceMockRecorder
+}
+
+// MockJWTServiceMockRecorder is the mock recorder for MockJWTService.
+type MockJWTServiceMockRecorder struct {
+	mock *MockJWTService
+}
+
+// NewMockJWTService creates a new mock instance.
+func NewMockJWTService(ctrl *gomock.Controller) *MockJWTService {
+	mock := &MockJWTService{ctrl: ctrl}
+	mock.recorder = &MockJWTServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockJWTService) EXPECT() *MockJWTServiceMockRecorder {
+	return m.recorder
+}
+
+// CreateToken mocks base method.
+func (m *MockJWTService) CreateToken(data map[string]interface{}, exp time.Time, alg jwt.Alg) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateToken", data, exp, alg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateToken indicates an expected call of CreateToken.
+func (mr *MockJWTServiceMockRecorder) CreateToken(data, exp, alg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateToken", reflect.TypeOf((*MockJWTService)(nil).CreateToken), data, exp, alg)
+}
+
+// Verify mocks base method.
+func (m *MockJWTService) Verify(token string) (map[string]interface{}, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Verify", token)
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Verify indicates an expected call of Verify.
+func (mr *MockJWTServiceMockRecorder) Verify(token interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockJWTService)(nil).Verify), token)
 }

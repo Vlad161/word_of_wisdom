@@ -6,38 +6,42 @@ import (
 	"time"
 
 	"word_of_wisdom/logger"
+	"word_of_wisdom/server/jwt"
 	"word_of_wisdom/server/token"
 )
 
-type (
-	getChallengeRespBody struct {
-		Timestamp  int64  `json:"timestamp"`
-		Token      string `json:"token"`
-		TargetBits uint   `json:"target_bits"`
-	}
+const (
+	keyTimestamp  = "timestamp"
+	keyToken      = "token"
+	keyTargetBits = "target_bits"
+	keyJWT        = "jwt"
+	keyIsVerify   = "is_verify"
+)
 
+type (
 	postChallengeReqBody struct {
-		Timestamp  int64  `json:"timestamp"`
-		Token      string `json:"token"`
-		TargetBits uint   `json:"target_bits"`
-		Nonce      int    `json:"nonce"`
+		Nonce int `json:"nonce"`
 	}
 
 	challengeHandler struct {
 		log logger.Logger
+		jwt JWTService
 
-		targetBits uint
-		tStorage   TokenStorage
-		pow        PoW
+		tokenLifeTime time.Duration
+		targetBits    uint
+		tStorage      TokenStorage
+		pow           PoW
 	}
 )
 
-func NewChallengeHandler(log logger.Logger, targetBits uint, tokenStorage TokenStorage, pow PoW) *challengeHandler {
+func NewChallengeHandler(log logger.Logger, jwt JWTService, tokenLifeTime time.Duration, targetBits uint, tokenStorage TokenStorage, pow PoW) *challengeHandler {
 	return &challengeHandler{
-		log:        log,
-		targetBits: targetBits,
-		tStorage:   tokenStorage,
-		pow:        pow,
+		log:           log,
+		jwt:           jwt,
+		tokenLifeTime: tokenLifeTime,
+		targetBits:    targetBits,
+		tStorage:      tokenStorage,
+		pow:           pow,
 	}
 }
 
@@ -54,21 +58,24 @@ func (h *challengeHandler) Handler() http.HandlerFunc {
 	}
 }
 
-func (h *challengeHandler) challengeRequest(w http.ResponseWriter, req *http.Request) {
+func (h *challengeHandler) challengeRequest(w http.ResponseWriter, _ *http.Request) {
 	tc := token.New()
+	ts := time.Now().Unix()
 
-	respBody := getChallengeRespBody{
-		Timestamp:  time.Now().Unix(),
-		Token:      tc,
-		TargetBits: h.targetBits,
+	payload := map[string]interface{}{
+		keyTimestamp:  ts,
+		keyToken:      tc,
+		keyTargetBits: h.targetBits,
 	}
-	bb, err := json.Marshal(&respBody)
+	jwtToken, err := h.jwt.CreateToken(payload, time.Now().Add(h.tokenLifeTime), jwt.AlgHS256)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if err = h.tStorage.Put(req.Context(), tc, h.targetBits); err != nil {
-		h.log.Error("challenge request, can't put to token storage", err)
+
+	payload[keyJWT] = jwtToken
+	bb, err := json.Marshal(&payload)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -84,21 +91,50 @@ func (h *challengeHandler) challengeVerify(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	sTargetBits, err := h.tStorage.Get(req.Context(), reqBody.Token)
+	reqJwtPayload, err := h.jwt.Verify(extractHeaderBearer(req.Header))
 	if err != nil {
-		h.log.Error("challenge verify, can't get from token storage", err)
+		h.log.Error("can't verify jwt token", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	isPowVerify := h.pow.Verify([]byte(reqBody.Token), reqBody.Timestamp, reqBody.TargetBits, reqBody.Nonce)
-	if sTargetBits == reqBody.TargetBits && isPowVerify {
-		if err = h.tStorage.Verify(req.Context(), reqBody.Token); err == nil {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+	var (
+		tc         = reqJwtPayload[keyToken].(string)
+		ts         = int64(reqJwtPayload[keyTimestamp].(float64))
+		targetBits = uint(reqJwtPayload[keyTargetBits].(float64))
+	)
+	if !h.pow.Verify([]byte(tc), ts, targetBits, reqBody.Nonce) {
+		h.log.Error("can't verify pow", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	h.log.Error("challenge verify, can't verify", err)
-	w.WriteHeader(http.StatusInternalServerError)
+	if err = h.tStorage.Put(req.Context(), tc); err != nil {
+		h.log.Error("can't put to token storage", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jwtToken, err := h.jwt.CreateToken(map[string]interface{}{
+		keyToken:    tc,
+		keyIsVerify: true,
+	}, time.Now().Add(h.tokenLifeTime), jwt.AlgHS256)
+	if err != nil {
+		h.log.Error("can't create jwt token", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	bb, err := json.Marshal(&map[string]interface{}{
+		keyJWT: jwtToken,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(bb)
+	return
+
 }

@@ -20,17 +20,12 @@ func (c *client) auth(ctx context.Context) error {
 		return fmt.Errorf("can't calculate hashcash")
 	}
 
-	err = c.postChallenge(ctx, postChallengeReqBody{
-		Timestamp:  challengeData.Timestamp,
-		Token:      challengeData.Token,
-		TargetBits: challengeData.TargetBits,
-		Nonce:      nonce,
-	})
+	postChallengeData, err := c.postChallenge(ctx, postChallengeReqBody{Nonce: nonce}, challengeData.JWT)
 	if err != nil {
 		return err
 	}
 
-	c.authHeaderValue = challengeData.Token
+	c.authHeaderValue = postChallengeData.JWT
 	return nil
 }
 
@@ -50,24 +45,31 @@ func (c *client) getChallenge(ctx context.Context) (getChallengeRespBody, error)
 		return respBody, errors.New("can't get challenge")
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
-	return respBody, err
+	return respBody, json.NewDecoder(resp.Body).Decode(&respBody)
 }
 
-func (c *client) postChallenge(ctx context.Context, body postChallengeReqBody) error {
+func (c *client) postChallenge(ctx context.Context, body postChallengeReqBody, jwt string) (postChallengeRespBody, error) {
+	var respBody postChallengeRespBody
+
 	bb := &bytes.Buffer{}
 	if err := json.NewEncoder(bb).Encode(&body); err != nil {
-		return err
+		return respBody, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.host+"/challenge", bb)
 	if err != nil {
-		return err
+		return respBody, err
 	}
+	addBearerHeader(req.Header, jwt)
 
 	resp, err := c.transport.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("can't post challenge")
+		return respBody, fmt.Errorf("can't post challenge: %w", err)
 	}
-	return nil
+
+	return respBody, json.NewDecoder(resp.Body).Decode(&respBody)
+}
+
+func addBearerHeader(h http.Header, token string) {
+	h.Add("Authorization", "Bearer "+token)
 }

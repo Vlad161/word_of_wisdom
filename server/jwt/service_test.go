@@ -17,14 +17,19 @@ func TestService(t *testing.T) {
 
 	t.Run("ok", func(t *testing.T) {
 		jwtService := jwt.New(keyPart1)
+		payload := map[string]interface{}{"id": "123"}
 		token, err := jwtService.CreateToken(
-			map[string]interface{}{"id": "123"},
+			payload,
 			time.Now().Add(10*time.Second),
 			jwt.AlgHS256,
 		)
 
 		require.NoError(t, err)
-		require.NoError(t, jwtService.Verify(token))
+
+		tokenPayload, err := jwtService.Verify(token)
+		require.NoError(t, err)
+		require.NotEmpty(t, tokenPayload["id"])
+		require.NotEmpty(t, tokenPayload["exp"])
 	})
 
 	t.Run("ok, empty data", func(t *testing.T) {
@@ -36,7 +41,9 @@ func TestService(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		require.NoError(t, jwtService.Verify(token))
+
+		_, err = jwtService.Verify(token)
+		require.NoError(t, err)
 	})
 
 	t.Run("error, unknown alg", func(t *testing.T) {
@@ -59,7 +66,9 @@ func TestService(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		require.Error(t, jwtService.Verify(token+"abc"))
+
+		_, err = jwtService.Verify(token + "abc")
+		require.Error(t, err)
 	})
 
 	t.Run("error, expired token", func(t *testing.T) {
@@ -71,7 +80,9 @@ func TestService(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		require.Error(t, jwtService.Verify(token))
+
+		_, err = jwtService.Verify(token)
+		require.Error(t, err)
 	})
 
 	t.Run("error, verify invalid token", func(t *testing.T) {
@@ -83,6 +94,8 @@ func TestService(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		require.Error(t, jwtService.Verify(strings.Join(strings.Split(token, ".")[:2], ".")))
+
+		_, err = jwtService.Verify(strings.Join(strings.Split(token, ".")[:2], "."))
+		require.Error(t, err)
 	})
 }

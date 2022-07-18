@@ -12,13 +12,15 @@ type (
 		Timestamp  int64  `json:"timestamp"`
 		Token      string `json:"token"`
 		TargetBits uint   `json:"target_bits"`
+		JWT        string `json:"jwt"`
+	}
+
+	postChallengeRespBody struct {
+		JWT string `json:"jwt"`
 	}
 
 	postChallengeReqBody struct {
-		Timestamp  int64  `json:"timestamp"`
-		Token      string `json:"token"`
-		TargetBits uint   `json:"target_bits"`
-		Nonce      int    `json:"nonce"`
+		Nonce int `json:"nonce"`
 	}
 
 	client struct {
@@ -60,7 +62,7 @@ func (c *client) doAuthRequest(ctx context.Context, req *http.Request, retry boo
 	resp, err := c.transport.Do(req)
 	if resp != nil && resp.StatusCode == http.StatusUnauthorized && !retry {
 		if err = c.auth(ctx); err == nil {
-			req.Header.Add("Authorization", "Bearer "+c.authHeaderValue)
+			addBearerHeader(req.Header, c.authHeaderValue)
 			return c.doAuthRequest(ctx, req, true)
 		}
 	}

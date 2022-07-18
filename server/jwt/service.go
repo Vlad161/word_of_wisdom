@@ -14,19 +14,19 @@ import (
 const (
 	hs256KeyPart2 = "stLwlC49P6WiTrl7epHE"
 
-	AlgHS256 alg = "HS256"
+	AlgHS256 Alg = "HS256"
 )
 
 var (
 	base64NoPadding = base64.RawURLEncoding
 
-	encodedHeaders = map[alg]string{
+	encodedHeaders = map[Alg]string{
 		AlgHS256: base64NoPadding.EncodeToString([]byte(`{"typ":"JWT","alg":"HS256"}`)),
 	}
 )
 
 type (
-	alg string
+	Alg string
 
 	service struct {
 		hs256Key []byte
@@ -39,7 +39,7 @@ func New(hs256KeyPart1 string) *service {
 	}
 }
 
-func (s *service) CreateToken(data map[string]interface{}, exp time.Time, alg alg) (string, error) {
+func (s *service) CreateToken(data map[string]interface{}, exp time.Time, alg Alg) (string, error) {
 	payload := make(map[string]interface{})
 	if data != nil {
 		payload = data
@@ -62,38 +62,38 @@ func (s *service) CreateToken(data map[string]interface{}, exp time.Time, alg al
 	}
 }
 
-func (s *service) Verify(token string) error {
+func (s *service) Verify(token string) (map[string]interface{}, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return errors.New("invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	decodedPayload, err := base64NoPadding.DecodeString(parts[1])
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var payload map[string]interface{}
 	if err := json.Unmarshal(decodedPayload, &payload); err != nil {
-		return err
+		return nil, err
 	}
 
 	if exp, ok := payload["exp"].(float64); !ok || time.Unix(int64(exp), 0).Before(time.Now()) {
-		return errors.New("token is expired")
+		return nil, errors.New("token is expired")
 	}
 
 	decodedHeader, err := base64NoPadding.DecodeString(parts[0])
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var header map[string]interface{}
 	if err := json.Unmarshal(decodedHeader, &header); err != nil {
-		return err
+		return nil, err
 	}
-	switch alg(header["alg"].(string)) {
+	switch Alg(header["alg"].(string)) {
 	case AlgHS256:
-		return hs256Verify(s.hs256Key, parts[0], parts[1], token)
+		return payload, hs256Verify(s.hs256Key, parts[0], parts[1], token)
 	default:
-		return errors.New("unknown alg")
+		return nil, errors.New("unknown alg")
 	}
 }
 

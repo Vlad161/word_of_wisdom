@@ -15,6 +15,7 @@ import (
 	"word_of_wisdom/logger"
 	"word_of_wisdom/pow"
 	"word_of_wisdom/server/handler"
+	"word_of_wisdom/server/jwt"
 	"word_of_wisdom/server/storage"
 	"word_of_wisdom/server/token"
 )
@@ -24,6 +25,7 @@ var (
 	redisHost           = env.GetString("REDIS_HOST", "localhost:6379")
 	authTokenLifetime   = env.GetDuration("AUTH_TOKEN_LIFETIME", 10*time.Second)
 	authTokenTargetBits = env.GetInt("AUTH_TOKEN_TARGET_BITS", 14)
+	jwtHs256KeyPart1    = env.GetString("JWT_HS256_KEY", "abcd")
 )
 
 func main() {
@@ -33,17 +35,18 @@ func main() {
 	log := logger.New()
 	defer log.Sync()
 
+	jwtService := jwt.New(jwtHs256KeyPart1)
 	rdb := redis.NewClient(&redis.Options{Addr: redisHost})
 
-	//localStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
-	redisStorage := token.NewStorageBytesAdapter(storage.NewRedis(rdb, authTokenLifetime))
+	//coreStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
+	coreStorage := token.NewStorageBytesAdapter(storage.NewRedis(rdb, authTokenLifetime))
 
-	tokenStorage := token.NewOnetimeStorage(redisStorage)
+	tokenStorage := token.NewOnetimeStorage(coreStorage)
 	powAlg := pow.NewHashCash()
-	challengeHandler := handler.NewChallengeHandler(log, uint(authTokenTargetBits), tokenStorage, powAlg)
+	challengeHandler := handler.NewChallengeHandler(log, jwtService, authTokenLifetime, uint(authTokenTargetBits), tokenStorage, powAlg)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/quote", handler.AuthMW(handler.QuoteHandlerFunc(), tokenStorage))
+	mux.HandleFunc("/quote", handler.AuthMW(handler.QuoteHandlerFunc(), tokenStorage, jwtService))
 	mux.HandleFunc("/challenge", challengeHandler.Handler())
 
 	server := http.Server{
@@ -52,7 +55,7 @@ func main() {
 	}
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			log.Error("server listen and server error:", err)
+			log.Info("server listen and server error:", err)
 		}
 	}()
 

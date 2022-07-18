@@ -54,6 +54,7 @@ func TestClient_Auth(t *testing.T) {
 					path:     "/challenge",
 					method:   gohttp.MethodPost,
 					respCode: gohttp.StatusOK,
+					respData: "{}",
 				},
 				{
 					path:     "/quote",

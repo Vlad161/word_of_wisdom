@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	serverHost = env.GetString("SERVER_HOST", "http://localhost:8080")
+	serverHost = env.GetString("SERVER_HOST", "http://localhost:8081")
 )
 
 func main() {
@@ -56,5 +56,5 @@ func wait(ctx context.Context, log logger.Logger) {
 		log.Error("main context was canceled:", ctx.Err())
 	}
 
-	log.Error("termination signal received")
+	log.Info("termination signal received")
 }
