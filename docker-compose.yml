@@ -8,6 +8,8 @@ services:
     build:
       dockerfile: client/Dockerfile
     container_name: word_of_wisdom_client
+    environment:
+      - SERVER_HOST=http://server:8081
     depends_on:
       - server
     restart: unless-stopped
@@ -15,6 +17,8 @@ services:
     build:
       dockerfile: server/Dockerfile
     container_name: word_of_wisdom_server
+    environment:
+      - REDIS_HOST=redis:6379
     depends_on:
       - redis
     restart: unless-stopped

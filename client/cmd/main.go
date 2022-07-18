@@ -10,7 +10,12 @@ import (
 	"time"
 
 	"word_of_wisdom/client/http"
+	"word_of_wisdom/env"
 	"word_of_wisdom/pow"
+)
+
+var (
+	serverHost = env.GetString("SERVER_HOST", "http://localhost:8080")
 )
 
 func main() {
@@ -20,9 +25,7 @@ func main() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	cl := http.NewClient("http://server:8001", &gohttp.Client{
-		Timeout: 3 * time.Second,
-	}, pow.NewHashCash())
+	cl := http.NewClient(serverHost, &gohttp.Client{Timeout: 3 * time.Second}, pow.NewHashCash())
 
 	go func() {
 	LOOP:

@@ -11,30 +11,32 @@ import (
 
 	"github.com/go-redis/redis/v9"
 
+	"word_of_wisdom/env"
 	"word_of_wisdom/pow"
 	"word_of_wisdom/server/handler"
 	"word_of_wisdom/server/storage"
 	"word_of_wisdom/server/token"
 )
 
-const (
-	port                = 8001
-	authTokenLifetime   = 10 * time.Second
-	authTokenTargetBits = 14
+var (
+	port                = env.GetInt("PORT", 8081)
+	redisHost           = env.GetString("REDIS_HOST", "localhost:6379")
+	authTokenLifetime   = env.GetDuration("AUTH_TOKEN_LIFETIME", 10*time.Second)
+	authTokenTargetBits = env.GetInt("AUTH_TOKEN_TARGET_BITS", 14)
 )
 
 func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
 
-	rdb := redis.NewClient(&redis.Options{Addr: "redis:6379"})
+	rdb := redis.NewClient(&redis.Options{Addr: redisHost})
 
 	//localStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
 	redisStorage := token.NewStorageBytesAdapter(storage.NewRedis(rdb, authTokenLifetime))
 
 	tokenStorage := token.NewOnetimeStorage(redisStorage)
 	powAlg := pow.NewHashCash()
-	challengeHandler := handler.NewChallengeHandler(authTokenTargetBits, tokenStorage, powAlg)
+	challengeHandler := handler.NewChallengeHandler(uint(authTokenTargetBits), tokenStorage, powAlg)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/quote", handler.AuthMW(handler.QuoteHandlerFunc(), tokenStorage))
