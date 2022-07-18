@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"word_of_wisdom/logger"
 	"word_of_wisdom/server/token"
 )
 
@@ -23,14 +24,17 @@ type (
 	}
 
 	challengeHandler struct {
+		log logger.Logger
+
 		targetBits uint
 		tStorage   TokenStorage
 		pow        PoW
 	}
 )
 
-func NewChallengeHandler(targetBits uint, tokenStorage TokenStorage, pow PoW) *challengeHandler {
+func NewChallengeHandler(log logger.Logger, targetBits uint, tokenStorage TokenStorage, pow PoW) *challengeHandler {
 	return &challengeHandler{
+		log:        log,
 		targetBits: targetBits,
 		tStorage:   tokenStorage,
 		pow:        pow,
@@ -64,6 +68,7 @@ func (h *challengeHandler) challengeRequest(w http.ResponseWriter, req *http.Req
 		return
 	}
 	if err = h.tStorage.Put(req.Context(), tc, h.targetBits); err != nil {
+		h.log.Error("challenge request, can't put to token storage", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -81,15 +86,19 @@ func (h *challengeHandler) challengeVerify(w http.ResponseWriter, req *http.Requ
 
 	sTargetBits, err := h.tStorage.Get(req.Context(), reqBody.Token)
 	if err != nil {
+		h.log.Error("challenge verify, can't get from token storage", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	isPowVerify := h.pow.Verify([]byte(reqBody.Token), reqBody.Timestamp, reqBody.TargetBits, reqBody.Nonce)
-	if sTargetBits == reqBody.TargetBits && isPowVerify && h.tStorage.Verify(req.Context(), reqBody.Token) == nil {
-		w.WriteHeader(http.StatusOK)
-		return
+	if sTargetBits == reqBody.TargetBits && isPowVerify {
+		if err = h.tStorage.Verify(req.Context(), reqBody.Token); err == nil {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 	}
 
+	h.log.Error("challenge verify, can't verify", err)
 	w.WriteHeader(http.StatusInternalServerError)
 }

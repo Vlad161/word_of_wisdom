@@ -12,6 +12,7 @@ import (
 	"github.com/go-redis/redis/v9"
 
 	"word_of_wisdom/env"
+	"word_of_wisdom/logger"
 	"word_of_wisdom/pow"
 	"word_of_wisdom/server/handler"
 	"word_of_wisdom/server/storage"
@@ -29,6 +30,9 @@ func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
 
+	log := logger.New()
+	defer log.Sync()
+
 	rdb := redis.NewClient(&redis.Options{Addr: redisHost})
 
 	//localStorage := storage.NewLocalTemporary(ctx, authTokenLifetime)
@@ -36,7 +40,7 @@ func main() {
 
 	tokenStorage := token.NewOnetimeStorage(redisStorage)
 	powAlg := pow.NewHashCash()
-	challengeHandler := handler.NewChallengeHandler(uint(authTokenTargetBits), tokenStorage, powAlg)
+	challengeHandler := handler.NewChallengeHandler(log, uint(authTokenTargetBits), tokenStorage, powAlg)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/quote", handler.AuthMW(handler.QuoteHandlerFunc(), tokenStorage))
@@ -48,30 +52,30 @@ func main() {
 	}
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			fmt.Println("server listen and server error:", err)
+			log.Error("server listen and server error:", err)
 		}
 	}()
 
 	// Waiting OS signals or context cancellation
-	wait(ctx)
+	wait(ctx, log)
 
 	ctxShutdown, cancelCtxShutdown := context.WithTimeout(ctx, 5*time.Second)
 	defer cancelCtxShutdown()
 
 	if err := server.Shutdown(ctxShutdown); err != nil {
-		fmt.Println("shutdown error:", err)
+		log.Error("shutdown error:", err)
 	}
 }
 
-func wait(ctx context.Context) {
+func wait(ctx context.Context, log logger.Logger) {
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case <-osSignals:
 	case <-ctx.Done():
-		fmt.Println("main context was canceled:", ctx.Err())
+		log.Error("main context was canceled:", ctx.Err())
 	}
 
-	fmt.Println("termination signal received")
+	log.Info("termination signal received")
 }

@@ -8,6 +8,7 @@ RUN go mod download
 COPY ./server ./server
 COPY ./pow ./pow
 COPY ./env ./env
+COPY ./logger ./logger
 
 RUN CGO_ENABLED=0 go build -o ./bin/server ./server/cmd
 

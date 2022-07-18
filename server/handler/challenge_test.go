@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"word_of_wisdom/logger"
 	"word_of_wisdom/server/handler"
 	"word_of_wisdom/test"
 )
@@ -19,6 +20,7 @@ import (
 func TestChallengeHandler_GET(t *testing.T) {
 	var (
 		ctrl       = gomock.NewController(t)
+		log        = logger.New()
 		targetBits = uint(14)
 	)
 
@@ -29,7 +31,7 @@ func TestChallengeHandler_GET(t *testing.T) {
 		tokenStorage := NewMockTokenStorage(ctrl)
 		tokenStorage.EXPECT().Put(gomock.Any(), gomock.Any(), targetBits).Times(1)
 
-		handler.NewChallengeHandler(targetBits, tokenStorage, nil).Handler().ServeHTTP(w, req)
+		handler.NewChallengeHandler(log, targetBits, tokenStorage, nil).Handler().ServeHTTP(w, req)
 
 		var body map[string]interface{}
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&body))
@@ -43,6 +45,7 @@ func TestChallengeHandler_GET(t *testing.T) {
 func TestChallengeHandler_Post(t *testing.T) {
 	var (
 		ctrl       = gomock.NewController(t)
+		log        = logger.New()
 		targetBits = uint(14)
 	)
 
@@ -110,7 +113,7 @@ func TestChallengeHandler_Post(t *testing.T) {
 			powAlg.EXPECT().Verify(tc.powVerify.Param1, tc.powVerify.Param2, tc.powVerify.Param3, tc.powVerify.Param4).
 				Return(tc.powVerify.Value1).Times(tc.powVerify.Calls)
 
-			handler.NewChallengeHandler(targetBits, tokenStorage, powAlg).Handler().ServeHTTP(w, req)
+			handler.NewChallengeHandler(log, targetBits, tokenStorage, powAlg).Handler().ServeHTTP(w, req)
 			assert.Equal(t, tc.expectedCode, w.Code)
 		})
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	gohttp "net/http"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 
 	"word_of_wisdom/client/http"
 	"word_of_wisdom/env"
+	"word_of_wisdom/logger"
 	"word_of_wisdom/pow"
 )
 
@@ -22,6 +22,9 @@ func main() {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
 
+	log := logger.New()
+	defer log.Sync()
+
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
@@ -32,7 +35,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println(cl.GetQuote(ctx))
+				log.Info(cl.GetQuote(ctx))
 			case <-ctx.Done():
 				break LOOP
 			}
@@ -40,18 +43,18 @@ func main() {
 	}()
 
 	// Waiting OS signals or context cancellation
-	wait(ctx)
+	wait(ctx, log)
 }
 
-func wait(ctx context.Context) {
+func wait(ctx context.Context, log logger.Logger) {
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case <-osSignals:
 	case <-ctx.Done():
-		fmt.Println("main context was canceled:", ctx.Err())
+		log.Error("main context was canceled:", ctx.Err())
 	}
 
-	fmt.Println("termination signal received")
+	log.Error("termination signal received")
 }
