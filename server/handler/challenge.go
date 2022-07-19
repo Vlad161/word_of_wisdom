@@ -99,11 +99,11 @@ func (h *challengeHandler) challengeVerify(w http.ResponseWriter, req *http.Requ
 	}
 
 	var (
-		tc         = reqJwtPayload[keyToken].(string)
-		ts         = int64(reqJwtPayload[keyTimestamp].(float64))
-		targetBits = uint(reqJwtPayload[keyTargetBits].(float64))
+		tc, _         = reqJwtPayload[keyToken].(string)
+		ts, _         = reqJwtPayload[keyTimestamp].(float64)
+		targetBits, _ = reqJwtPayload[keyTargetBits].(float64)
 	)
-	if !h.pow.Verify([]byte(tc), ts, targetBits, reqBody.Nonce) {
+	if !h.pow.Verify([]byte(tc), int64(ts), uint(targetBits), reqBody.Nonce) {
 		h.log.Error("can't verify pow", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
